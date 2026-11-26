@@ -31,7 +31,7 @@ class BookRepositoryTest {
 
 	@Test
 	void findBooksInPriceRange() {
-		List<Book> books = repository.findBooks("Travel", new BigDecimal("10"), new BigDecimal("30"));
+		List<Book> books = repository.findBooks("Travel", 10.0, 30.0);
 
 		assertThat(books).extracting(Book::price)
 				.containsExactly(new BigDecimal("23.21"), new BigDecimal("26.08"));   // 가격 오름차순
@@ -43,18 +43,18 @@ class BookRepositoryTest {
 	@Test
 	void findBooksIncludesBoundaryPrices() {
 		// BETWEEN은 양 끝을 포함한다: 정확히 23.21 ~ 26.08로 조회해도 두 권 모두 나와야 한다.
-		List<Book> books = repository.findBooks("Travel", new BigDecimal("23.21"), new BigDecimal("26.08"));
+		List<Book> books = repository.findBooks("Travel", 23.21, 26.08);
 		assertThat(books).hasSize(2);
 	}
 
 	@Test
 	void findBooksReturnsEmptyListWhenNoBookInRange() {
-		assertThat(repository.findBooks("Travel", new BigDecimal("0"), new BigDecimal("1"))).isEmpty();
+		assertThat(repository.findBooks("Travel", 0.0, 1.0)).isEmpty();
 	}
 
 	@Test
 	void findBooksIgnoresCategoryCase() {
 		// existsCategory("travel")가 true라면, 같은 이름으로 책도 찾아져야 한다.
-		assertThat(repository.findBooks("travel", new BigDecimal("10"), new BigDecimal("30"))).hasSize(2);
+		assertThat(repository.findBooks("travel", 10.0, 30.0)).hasSize(2);
 	}
 }

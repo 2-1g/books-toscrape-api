@@ -28,8 +28,8 @@ public class BookRepository {
 
     public List<Book> findBooks(
             String category,
-            BigDecimal minPrice,
-            BigDecimal maxPrice
+            double minPrice,
+            double maxPrice
     ) {
 
         String sql = """
