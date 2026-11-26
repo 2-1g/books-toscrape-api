@@ -4,6 +4,7 @@ import com.database.jdbcpractice.exception.CategoryNotFoundException;
 import com.database.jdbcpractice.exception.InvalidPriceRangeException;
 import com.database.jdbcpractice.model.Book;
 import com.database.jdbcpractice.repository.BookRepository;
+import com.database.jdbcpractice.response.MessageResponse;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -36,5 +37,10 @@ public class BookService {
         }
 
         return repository.findBooks(category, minPrice, maxPrice);
+    }
+
+    public MessageResponse deleteAll() {
+        repository.deleteAll();
+        return new MessageResponse("모든 데이터를 삭제했습니다");
     }
 }

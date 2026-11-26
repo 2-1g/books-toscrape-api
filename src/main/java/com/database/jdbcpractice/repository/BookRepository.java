@@ -51,4 +51,8 @@ public class BookRepository {
                         rs.getString("category")),
                 category, minPrice, maxPrice);
     }
+
+    public void deleteAll() {
+        jdbc.execute("truncate book, category restart identity");
+    }
 }
