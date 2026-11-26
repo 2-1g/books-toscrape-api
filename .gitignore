@@ -37,3 +37,6 @@ build/
 .omx
 .claude
 .omc
+
+### Secrets ###
+application-secret.yaml
