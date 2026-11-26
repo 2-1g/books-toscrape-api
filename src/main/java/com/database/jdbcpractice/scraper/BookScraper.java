@@ -8,10 +8,14 @@ import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 앱 시작 시 books.toscrape.com을 jsoup으로 크롤링해서 category, book 테이블에 저장한다.
@@ -19,6 +23,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class BookScraper implements ApplicationRunner {
 
+	private static final Logger log = LoggerFactory.getLogger(BookScraper.class);
 	private static final String BASE_URL = "https://books.toscrape.com/";
 	private static final List<String> RATINGS = List.of("One", "Two", "Three", "Four", "Five");
 
@@ -28,18 +33,33 @@ public class BookScraper implements ApplicationRunner {
 		this.jdbc = jdbc;
 	}
 
+	/**
+	 * 크롤링 전체를 하나의 트랜잭션으로 묶는다. 도중에 실패하면 전부 롤백되어 DB가 빈 상태로 남고,
+	 * 다음 실행에서 처음부터 다시 크롤링한다.
+	 * IOException 같은 checked 예외는 기본적으로 롤백되지 않으므로 rollbackFor를 지정한다.
+	 */
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public void run(ApplicationArguments args) throws IOException {
 		// 이미 저장되어 있으면 다시 크롤링하지 않는다.
-		if (jdbc.queryForObject("SELECT COUNT(*) FROM book", Integer.class) > 0) {
+		int saved = countBooks();
+		if (saved > 0) {
+			log.info("이미 책 {}권이 저장되어 있어 크롤링을 건너뜁니다", saved);
 			return;
 		}
 
+		log.info("크롤링 시작: {}", BASE_URL);
 		Document home = Jsoup.connect(BASE_URL).get();
-		for (Element a : home.select("ul.nav-list > li > ul > li > a")) {
+		Elements categories = home.select("ul.nav-list > li > ul > li > a");
+		for (Element a : categories) {
 			int categoryId = saveCategory(a.text().trim(), a.absUrl("href"));
 			scrapeBooks(categoryId, a.absUrl("href"));
 		}
+		log.info("크롤링 완료: 카테고리 {}개, 책 {}권 저장", categories.size(), countBooks());
+	}
+
+	private int countBooks() {
+		return jdbc.queryForObject("SELECT COUNT(*) FROM book", Integer.class);
 	}
 
 	/** 카테고리의 첫 페이지부터 "next" 링크가 없을 때까지 책을 모아서, 한 번의 batch로 저장한다. */
