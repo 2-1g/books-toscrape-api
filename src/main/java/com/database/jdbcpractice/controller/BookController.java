@@ -1,7 +1,9 @@
 package com.database.jdbcpractice.controller;
 
 import com.database.jdbcpractice.model.Book;
+import com.database.jdbcpractice.response.MessageResponse;
 import com.database.jdbcpractice.service.BookService;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,5 +26,10 @@ public class BookController {
             @RequestParam double maxPrice
     ) {
         return bookService.findBooks(category, minPrice, maxPrice);
+    }
+
+    @DeleteMapping("/books")
+    public MessageResponse deleteAllBooks() {
+        return bookService.deleteAll();
     }
 }
